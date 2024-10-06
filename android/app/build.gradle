@@ -1,0 +1,69 @@
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    id "dev.flutter.flutter-gradle-plugin"  // Flutter Gradle Plugin must be applied after the Android plugin
+}
+
+def localProperties = new Properties()
+def localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader("UTF-8") { reader ->
+        localProperties.load(reader)
+    }
+}
+
+def flutterVersionCode = localProperties.getProperty("flutter.versionCode")
+if (flutterVersionCode == null) {
+    flutterVersionCode = "1"
+}
+
+def flutterVersionName = localProperties.getProperty("flutter.versionName")
+if (flutterVersionName == null) {
+    flutterVersionName = "1.0"
+}
+
+android {
+    namespace = "com.example.myapp"
+    compileSdkVersion 34  // Use explicit version or match with Flutter SDK version
+    ndkVersion = "23.1.7779620"  // You can specify an NDK version if needed for TensorFlow Lite
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+
+    lintOptions {
+            checkReleaseBuilds false
+        }
+
+    defaultConfig {
+        applicationId = "com.example.myapp"
+        minSdkVersion 21  // Match with your Flutter min SDK version
+        targetSdkVersion 34
+        versionCode flutterVersionCode.toInteger()
+        versionName flutterVersionName
+
+        // Enable TensorFlow Lite NNAPI delegate if using
+        ndk {
+            abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig = signingConfigs.debug  // Ensure you sign properly for release
+            minifyEnabled false
+            shrinkResources false
+        }
+    }
+}
+
+flutter {
+    source = "../.."
+}
+
+// dependencies {
+//     implementation "org.tensorflow:tensorflow-lite:2.14.0"  // Make sure to use a compatible TensorFlow Lite version
+//     implementation "org.tensorflow:tensorflow-lite-select-tf-ops:2.14.0"  // Use this if you need full ops support
+//     implementation "org.tensorflow:tensorflow-lite-gpu:2.14.0"  // Optional: GPU acceleration for TFLite
+// }
