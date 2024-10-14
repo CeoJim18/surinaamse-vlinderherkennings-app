@@ -9,9 +9,11 @@ class DatabaseService {
   static Database? _db;
   static final DatabaseService instance = DatabaseService._constructor();
 
-  final String _butterflyInformationTableName = 'butterfly_species';
+  final String _speciesOutputPositionTableName = 'species_output_position';
+  final String _speciesNamesTableName = 'species_names';
   final String _speciesIdColumnName = 'species_id';
   final String _speciesNameColumnName = 'species_name';
+  final String _speciesOutputPositionColumnName = 'output_position';
 
   DatabaseService._constructor();
 
@@ -49,16 +51,24 @@ class DatabaseService {
     return _db!;
   }
 
-    Future<Map<String, dynamic>?> getButterflyInfo(int speciesId) async {
+    Future<Map<String, dynamic>?> getButterflySpeciesName(int modelOutputPosition) async {
     final db = await database;
     final List<Map<String, dynamic>> results = await db.query(
-      _butterflyInformationTableName,
-      where: '$_speciesIdColumnName = ?',
-      whereArgs: [speciesId],
+      _speciesOutputPositionTableName,
+      where: '$_speciesOutputPositionColumnName = ?',
+      whereArgs: [modelOutputPosition],
     );
-    if (results.isNotEmpty) {
-      return results.first;
-    }
+    
+      final int speciesId = results.first[_speciesIdColumnName];
+      final List<Map<String, dynamic>> speciesNameResults = await db.query(
+        _speciesNamesTableName,
+        where: '$_speciesIdColumnName = ?',
+        whereArgs: [speciesId],
+      );
+      if (speciesNameResults.isNotEmpty) {
+        return speciesNameResults.first;
+      }
+    
     return null;
   }
 

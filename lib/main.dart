@@ -118,8 +118,8 @@ class _MyHomePageState extends State<MyHomePage> {
     );
 
     int maxIndex = predictionResult.indexOf(maxElement);
-
-    final speciesData = await _databaseService.getButterflyInfo(maxIndex + 1);
+int positionModelOutput = maxIndex + 1;
+    final speciesData = await _databaseService.getButterflySpeciesName(positionModelOutput + 1);
 
     String speciesName = speciesData!['species_name'];
 
