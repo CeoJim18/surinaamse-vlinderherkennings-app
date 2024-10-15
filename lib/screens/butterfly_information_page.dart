@@ -2,9 +2,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
-class InformationPage extends StatelessWidget {
+class ButterflyInformationPage extends StatelessWidget {
   final String vlinderSoort;
-  const InformationPage({super.key, required this.vlinderSoort});
+  const ButterflyInformationPage({super.key, required this.vlinderSoort});
 
   @override
   Widget build(BuildContext context) {
