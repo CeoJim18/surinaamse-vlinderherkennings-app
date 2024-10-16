@@ -6,7 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:myapp/services/butterfly_ai_service.dart';
 import 'package:myapp/services/database_service.dart';
 import 'package:myapp/widgets/action_button.dart';
-import 'package:myapp/widgets/image_cart.dart';
+import 'package:myapp/widgets/image_card.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -20,6 +20,7 @@ class _HomeScreenState extends State<HomeScreen> {
   File? filePath;
   String label = '';
   double confidence = 0.0;
+  bool isRecognitionLoading = false;
   late Interpreter interpreter;
   final DatabaseService _databaseService = DatabaseService.instance;
   final ButterflyAIService butterflyAIService = ButterflyAIService();
@@ -41,6 +42,10 @@ class _HomeScreenState extends State<HomeScreen> {
   // }
 
   pickImageGallery() async {
+    setState(() {
+      filePath = null;
+      isRecognitionLoading = true;
+    });
     final ImagePicker picker = ImagePicker();
     final image = await picker.pickImage(source: ImageSource.gallery);
 
@@ -48,9 +53,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     var imageFile = File(image.path);
 
-    setState(() {
-      filePath = imageFile;
-    });
 
     final result = await butterflyAIService.recognizeButterfly(imageFile);
     final indexModelOutput = result[
@@ -67,6 +69,8 @@ class _HomeScreenState extends State<HomeScreen> {
     devtools.log(maxElement.toString());
 
     setState(() {
+      filePath = imageFile;
+      isRecognitionLoading = false;
       confidence = maxElement * 100;
       label = speciesName;
     });
@@ -101,6 +105,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 label: label,
                 confidence: confidence,
                 filePath: filePath,
+                isRecognitionLoading: isRecognitionLoading,
               ),
               const SizedBox(
                 height: 8,

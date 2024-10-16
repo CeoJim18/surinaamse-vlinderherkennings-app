@@ -31,6 +31,7 @@ dependencies:
   flutter:
     sdk: flutter
 
+  loading_animation_widget: ^1.3.0
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.6
@@ -65,6 +66,7 @@ flutter:
   assets:
     - assets/
     - assets/databases/butterfly_species.db
+    - assets/upload.jpg
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

@@ -5,8 +5,7 @@ class ActionButton extends StatelessWidget {
   final String buttonText;
 
   const ActionButton(
-      {Key? key, required this.onPressedFunction, required this.buttonText})
-      : super(key: key);
+      {super.key, required this.onPressedFunction, required this.buttonText});
 
   @override
   Widget build(BuildContext context) {

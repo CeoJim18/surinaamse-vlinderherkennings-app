@@ -1,8 +1,8 @@
-
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 import '../screens/butterfly_information_page.dart';
 
@@ -10,14 +10,15 @@ class ImageCard extends StatelessWidget {
   final String label;
   final double confidence;
   final File? filePath;
+  final bool isRecognitionLoading;
 
   const ImageCard({
-    Key? key,
+    super.key,
     required this.label,
     required this.confidence,
     required this.filePath,
-  }) : super(key: key);
-
+    required this.isRecognitionLoading,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -38,16 +39,23 @@ class ImageCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
-                  image: const DecorationImage(
-                    image: AssetImage('assets/upload.jpg'),
-                  ),
+                  image: (filePath == null && isRecognitionLoading)
+                      ? null
+                      : (filePath == null)
+                          ? const DecorationImage(
+                              image: AssetImage('assets/upload.jpg'),
+                            )
+                          : DecorationImage(
+                              image: FileImage(filePath!),
+                              fit: BoxFit.cover,
+                            ),
                 ),
-                child: filePath == null
-                    ? const Text('')
-                    : Image.file(
-                  filePath!,
-                  fit: BoxFit.fill,
-                ),
+                child: isRecognitionLoading
+                    ? LoadingAnimationWidget.flickr(
+                        leftDotColor: const Color(0xFF0063DC),
+                        rightDotColor: const Color(0xFFFF0084),
+                        size: 100)
+                    : null,
               ),
               const SizedBox(
                 height: 12,
@@ -78,9 +86,9 @@ class ImageCard extends StatelessWidget {
                     CupertinoButton(
                         child: label.isNotEmpty
                             ? const Text('Learn more',
-                            style: TextStyle(
-                                color: Colors.deepPurple,
-                                fontWeight: FontWeight.bold))
+                                style: TextStyle(
+                                    color: Colors.deepPurple,
+                                    fontWeight: FontWeight.bold))
                             : const Text(''),
                         onPressed: () {
                           Navigator.push(
@@ -98,6 +106,5 @@ class ImageCard extends StatelessWidget {
         ),
       ),
     );
-    
   }
 }

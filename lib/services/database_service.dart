@@ -12,7 +12,7 @@ class DatabaseService {
   final String _speciesOutputPositionTableName = 'species_output_position';
   final String _speciesNamesTableName = 'species_names';
   final String _speciesIdColumnName = 'species_id';
-  final String _speciesNameColumnName = 'species_name';
+  // final String _speciesNameColumnName = 'species_name';
   final String _speciesOutputPositionColumnName = 'output_position';
 
   DatabaseService._constructor();
@@ -25,9 +25,13 @@ class DatabaseService {
     // Check if the database already exists
     bool dbExists = await databaseExists(path);
 
-    if (!dbExists) {
+    if (dbExists) {
+      devtools.log('Database exists in localstorage, deleting database...');
+      await deleteDatabase(path);
+    }
+    
       // If the database doesn't exist, copy it from assets
-      devtools.log('Copying database from assets...');
+      devtools.log('Copying database from assets to localstorage...');
       ByteData data =
           await rootBundle.load('assets/databases/butterfly_species.db');
       List<int> bytes =
@@ -35,9 +39,6 @@ class DatabaseService {
 
       // Write the copied database to the device
       await File(path).writeAsBytes(bytes, flush: true);
-    } else {
-      devtools.log('Database already exists.');
-    }
 
     // Open the database
     return await openDatabase(path);
@@ -71,6 +72,8 @@ class DatabaseService {
     
     return null;
   }
+  
+  
 
 //   Future<Database> get database async {
 //     if (_db != null) {
