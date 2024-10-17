@@ -41,7 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
   //   }
   // }
 
-  pickImageGallery() async {
+  pickImageGalleryAndRecognize() async {
     setState(() {
       filePath = null;
       isRecognitionLoading = true;
@@ -62,6 +62,36 @@ class _HomeScreenState extends State<HomeScreen> {
     final maxElement = result['confidence'];
     final speciesData =
         await _databaseService.getButterflySpeciesName(positionModelOutput);
+
+    String speciesName = speciesData!['species_name'];
+
+    devtools.log(speciesName);
+    devtools.log(maxElement.toString());
+
+    setState(() {
+      filePath = imageFile;
+      isRecognitionLoading = false;
+      confidence = maxElement * 100;
+      label = speciesName;
+    });
+  }
+  takePictureAndRecognize() async {
+    setState(() {
+      filePath = null;
+      isRecognitionLoading = true;
+    });
+    final ImagePicker picker = ImagePicker();
+    final image = await picker.pickImage(source: ImageSource.camera);
+
+    if (image == null) return;
+
+    var imageFile = File(image.path);
+
+    final result = await butterflyAIService.recognizeButterfly(imageFile);
+    final indexModelOutput = result['positionModelOutput']; // class number in classifier layer of model
+    final positionModelOutput = indexModelOutput + 1; // class number + 1, to avoid having a 0
+    final maxElement = result['confidence'];
+    final speciesData = await _databaseService.getButterflySpeciesName(positionModelOutput);
 
     String speciesName = speciesData!['species_name'];
 
@@ -111,12 +141,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 8,
               ),
               ActionButton(
-                  onPressedFunction: pickImageGallery,
+                  onPressedFunction: pickImageGalleryAndRecognize,
                   buttonText: "Pick from gallery"),
               const SizedBox(
                 height: 8,
               ),
-              ActionButton(onPressedFunction: () {}, buttonText: "buttonText"),
+              ActionButton(onPressedFunction: takePictureAndRecognize, buttonText: "Take a picture"),
             ],
           ),
         ),
