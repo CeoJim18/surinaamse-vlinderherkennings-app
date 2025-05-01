@@ -75,7 +75,7 @@ class ImageCard extends StatelessWidget {
                       height: 12,
                     ),
                     Text(
-                      "The Accuracy is ${confidence.toStringAsFixed(2)}%",
+                      "Probability: ${confidence.toStringAsFixed(2)}%",
                       style: const TextStyle(
                         fontSize: 18,
                       ),

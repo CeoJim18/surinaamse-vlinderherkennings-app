@@ -2,12 +2,13 @@ import 'dart:developer' as devtools;
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:myapp/services/butterfly_ai_service.dart';
-import 'package:myapp/services/database_service.dart';
 import 'package:myapp/widgets/action_button.dart';
 import 'package:myapp/widgets/image_card.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
+
+import '../constants/butterfly_species.dart';
+import '../services/image_picker_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -22,88 +23,76 @@ class _HomeScreenState extends State<HomeScreen> {
   double confidence = 0.0;
   bool isRecognitionLoading = false;
   late Interpreter interpreter;
-  final DatabaseService _databaseService = DatabaseService.instance;
   final ButterflyAIService butterflyAIService = ButterflyAIService();
+  final ImagePickerService imagePickerService = ImagePickerService();
 
-  // List<String> butterflySpecies = [
-  //   'Heraclides thoas',
-  //   'Heliopetes arsalte',
-  //   'Heliconius antiochus'
-  // ];
 
-  // Future<void> _tfLteInit() async {
-  //   try {
-  //     // InterpreterOptions().useNnApiForAndroid = true;
-  //     interpreter =
-  //         await Interpreter.fromAsset('assets/__2024-10-07_01_46.tflite');
-  //   } catch (e) {
-  //     devtools.log("Error loading model: $e");
-  //   }
-  // }
+  Future<void> _processImageAndRecognize(File? imageFile) async {
+    if (imageFile == null) {
+      // Handle case where user cancelled picking/taking image
+      setState(() {
+        isRecognitionLoading = false; // Ensure loading stops if cancelled early
+      });
+      return;
+    }
 
-  pickImageGalleryAndRecognize() async {
     setState(() {
-      filePath = null;
+      filePath = null; // Clear previous image display while processing new one
+      label = '';
+      confidence = 0.0;
       isRecognitionLoading = true;
     });
-    final ImagePicker picker = ImagePicker();
-    final image = await picker.pickImage(source: ImageSource.gallery);
 
-    if (image == null) return;
+    try {
+      // Use the length from the imported constant list
+      final result = await butterflyAIService.recognizeButterfly(
+          imageFile, butterflySpecies.length);
+      final indexModelOutput = result['positionModelOutput'];
+      final maxElement = result['confidence'];
 
-    var imageFile = File(image.path);
+      // Ensure index is within bounds using the constant list
+      if (indexModelOutput >= 0 && indexModelOutput < butterflySpecies.length) {
+        String speciesName = butterflySpecies[indexModelOutput];
+        devtools.log('Recognized: $speciesName');
+        devtools.log('Confidence: ${maxElement.toString()}');
 
-
-    final result = await butterflyAIService.recognizeButterfly(imageFile);
-    final indexModelOutput = result[
-        'positionModelOutput']; // class number in classifier layer van model
-    final positionModelOutput = indexModelOutput +
-        1; // class nummer + 1, om te voorkomen dat er een 0 erin voorkomt
-    final maxElement = result['confidence'];
-    final speciesData =
-        await _databaseService.getButterflySpeciesName(positionModelOutput);
-
-    String speciesName = speciesData!['species_name'];
-
-    devtools.log(speciesName);
-    devtools.log(maxElement.toString());
-
-    setState(() {
-      filePath = imageFile;
-      isRecognitionLoading = false;
-      confidence = maxElement * 100;
-      label = speciesName;
-    });
+        setState(() {
+          filePath = imageFile;
+          confidence = maxElement * 100;
+          label = speciesName;
+        });
+      } else {
+        devtools.log('Error: Invalid index from model output: $indexModelOutput');
+        setState(() {
+          filePath = imageFile; // Show the image even if recognition failed
+          label = 'Recognition Error';
+          confidence = 0.0;
+        });
+      }
+    } catch (e) {
+      devtools.log('Error during recognition: $e');
+      setState(() {
+        filePath = imageFile; // Show the image even on error
+        label = 'Error';
+        confidence = 0.0;
+      });
+    } finally {
+      setState(() {
+        isRecognitionLoading = false;
+      });
+    }
   }
+
+  // Updated method using the service and helper
+  pickImageGalleryAndRecognize() async {
+    File? imageFile = await imagePickerService.pickImageFromGallery();
+    await _processImageAndRecognize(imageFile);
+  }
+
+  // Updated method using the service and helper
   takePictureAndRecognize() async {
-    setState(() {
-      filePath = null;
-      isRecognitionLoading = true;
-    });
-    final ImagePicker picker = ImagePicker();
-    final image = await picker.pickImage(source: ImageSource.camera);
-
-    if (image == null) return;
-
-    var imageFile = File(image.path);
-
-    final result = await butterflyAIService.recognizeButterfly(imageFile);
-    final indexModelOutput = result['positionModelOutput']; // class number in classifier layer of model
-    final positionModelOutput = indexModelOutput + 1; // class number + 1, to avoid having a 0
-    final maxElement = result['confidence'];
-    final speciesData = await _databaseService.getButterflySpeciesName(positionModelOutput);
-
-    String speciesName = speciesData!['species_name'];
-
-    devtools.log(speciesName);
-    devtools.log(maxElement.toString());
-
-    setState(() {
-      filePath = imageFile;
-      isRecognitionLoading = false;
-      confidence = maxElement * 100;
-      label = speciesName;
-    });
+    File? imageFile = await imagePickerService.takePictureWithCamera();
+    await _processImageAndRecognize(imageFile);
   }
 
   @override
@@ -146,7 +135,9 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(
                 height: 8,
               ),
-              ActionButton(onPressedFunction: takePictureAndRecognize, buttonText: "Take a picture"),
+              ActionButton(
+                  onPressedFunction: takePictureAndRecognize,
+                  buttonText: "Take a picture"),
             ],
           ),
         ),
