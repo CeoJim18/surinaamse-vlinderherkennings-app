@@ -22,10 +22,10 @@ class _HomeScreenState extends State<HomeScreen> {
   String label = '';
   double confidence = 0.0;
   bool isRecognitionLoading = false;
+  int? inferenceTimeMs;
   late Interpreter interpreter;
   final ButterflyAIService butterflyAIService = ButterflyAIService();
   final ImagePickerService imagePickerService = ImagePickerService();
-
 
   Future<void> _processImageAndRecognize(File? imageFile) async {
     if (imageFile == null) {
@@ -40,6 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
       filePath = null; // Clear previous image display while processing new one
       label = '';
       confidence = 0.0;
+      inferenceTimeMs = null;
       isRecognitionLoading = true;
     });
 
@@ -49,6 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
           imageFile, butterflySpecies.length);
       final indexModelOutput = result['positionModelOutput'];
       final maxElement = result['confidence'];
+      final timeMs = result['inferenceTimeMs'];
 
       // Ensure index is within bounds using the constant list
       if (indexModelOutput >= 0 && indexModelOutput < butterflySpecies.length) {
@@ -60,13 +62,16 @@ class _HomeScreenState extends State<HomeScreen> {
           filePath = imageFile;
           confidence = maxElement * 100;
           label = speciesName;
+          inferenceTimeMs = timeMs;
         });
       } else {
-        devtools.log('Error: Invalid index from model output: $indexModelOutput');
+        devtools
+            .log('Error: Invalid index from model output: $indexModelOutput');
         setState(() {
           filePath = imageFile; // Show the image even if recognition failed
           label = 'Recognition Error';
           confidence = 0.0;
+          inferenceTimeMs = timeMs;
         });
       }
     } catch (e) {
@@ -75,6 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
         filePath = imageFile; // Show the image even on error
         label = 'Error';
         confidence = 0.0;
+        inferenceTimeMs = null;
       });
     } finally {
       setState(() {
@@ -125,6 +131,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 confidence: confidence,
                 filePath: filePath,
                 isRecognitionLoading: isRecognitionLoading,
+                inferenceTimeMs: inferenceTimeMs,
               ),
               const SizedBox(
                 height: 8,

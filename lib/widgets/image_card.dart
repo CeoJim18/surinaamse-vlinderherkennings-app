@@ -12,12 +12,15 @@ class ImageCard extends StatelessWidget {
   final File? filePath;
   final bool isRecognitionLoading;
 
+  final int? inferenceTimeMs;
+
   const ImageCard({
     super.key,
     required this.label,
     required this.confidence,
     required this.filePath,
     required this.isRecognitionLoading,
+    required this.inferenceTimeMs,
   });
 
   @override
@@ -75,7 +78,7 @@ class ImageCard extends StatelessWidget {
                       height: 12,
                     ),
                     Text(
-                      "Probability: ${confidence.toStringAsFixed(2)}%",
+                      "Confidence: ${confidence.toStringAsFixed(2)}%",
                       style: const TextStyle(
                         fontSize: 18,
                       ),
@@ -83,21 +86,39 @@ class ImageCard extends StatelessWidget {
                     const SizedBox(
                       height: 5,
                     ),
+                    if (inferenceTimeMs != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4.0),
+                        child: Text(
+                          'Latency: ${inferenceTimeMs}ms',
+                          style: const TextStyle(
+                            fontSize: 12,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    const SizedBox(
+                      height: 5,
+                    ),
                     CupertinoButton(
-                        child: label.isNotEmpty
-                            ? const Text('Learn more',
-                                style: TextStyle(
-                                    color: Colors.deepPurple,
-                                    fontWeight: FontWeight.bold))
-                            : const Text(''),
-                        onPressed: () {
-                          Navigator.push(
-                              context,
-                              CupertinoPageRoute(
-                                  builder: (context) =>
-                                      ButterflyInformationPage(
-                                          vlinderSoort: label)));
-                        })
+                      child: label.isNotEmpty
+                          ? const Text(
+                              'Learn more',
+                              style: TextStyle(
+                                  color: Colors.deepPurple,
+                                  fontWeight: FontWeight.bold),
+                            )
+                          : const Text(''),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          CupertinoPageRoute(
+                            builder: (context) =>
+                                ButterflyInformationPage(vlinderSoort: label),
+                          ),
+                        );
+                      },
+                    )
                   ],
                 ),
               ),
